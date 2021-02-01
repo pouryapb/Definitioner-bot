@@ -107,7 +107,7 @@ bot.on("inline_query", (ctx) => {
             description: defs.results[0].definition,
             message_text: `*${defs.word}*${
               '\n_pronunciation_: "' +
-              (defs.pronunciation instanceof String
+              (!(defs.pronunciation instanceof Object)
                 ? defs.pronunciation
                 : defs.pronunciation.all)
             }\"\n\n${text
