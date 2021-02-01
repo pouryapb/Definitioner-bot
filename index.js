@@ -50,6 +50,7 @@ ${
     })
     .catch((err) => {
       console.log(err);
+      ctx.answerInlineQuery([]);
     });
 });
 bot.launch();
