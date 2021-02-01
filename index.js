@@ -70,6 +70,7 @@ bot.on("inline_query", (ctx) => {
 
   const word = ctx.inlineQuery.query;
   const defs = wordsApi(word);
+  console.log(defs);
   if (defs === null) {
     ctx.answerInlineQuery([]);
   } else {
