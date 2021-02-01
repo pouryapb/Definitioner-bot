@@ -71,7 +71,7 @@ bot.on("inline_query", async (ctx) => {
   const word = ctx.inlineQuery.query;
   const defs = await wordsApi(word);
   console.log(defs);
-  if (defs) {
+  if (!defs) {
     ctx.answerInlineQuery([]);
   } else {
     const text = defs.results.map((info, index) => {
