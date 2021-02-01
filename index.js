@@ -30,35 +30,92 @@ bot.help((ctx) => ctx.reply("Send me a sticker"));
 bot.on("sticker", (ctx) => ctx.reply("👍"));
 bot.hears("hi", (ctx) => ctx.reply("Hellow there!"));
 
+// bot.on("inline_query", (ctx) => {
+//   const word = ctx.inlineQuery.query;
+//   fetch(
+//     "https://www.wordsapi.com/mashape/words/" +
+//       word +
+//       "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
+//   )
+//     .then((res) => {
+//       if (res.status === 404) {
+//         return null;
+//       }
+//       return res.json();
+//     })
+//     .then((resBody) => {
+//       if (resBody === null) {
+//         ctx.answerInlineQuery([]);
+//       } else {
+//         const defs = resBody;
+//         const text = defs.results.map((info, index) => {
+//           const examples =
+//             info.examples === undefined
+//               ? null
+//               : info.examples.map((eg) => {
+//                   return `\"${eg}\"`;
+//                 });
+//           return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
+//             examples ? '"\n_*eg*_:\n' + examples.join("\n") : ""
+//           }${
+//             info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
+//           }`;
+//         });
+
+//         const result = [
+//           {
+//             type: "article",
+//             id: 0,
+//             title: defs.word,
+//             description: defs.results[0].definition,
+//             message_text: `*${defs.word}*${
+//               defs.pronunciation instanceof Object
+//                 ? '\n_pronunciation_: "' + defs.pronunciation.all
+//                 : defs.pronunciation === undefined
+//                 ? ""
+//                 : '\n_pronunciation_: "' + defs.pronunciation
+//             }\"\n\n${text
+//               .join("\n\n\n")
+//               .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
+//             parse_mode: "MarkdownV2",
+//           },
+//         ];
+//         ctx.answerInlineQuery(result);
+//       }
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// });
+
 bot.on("inline_query", (ctx) => {
   const word = ctx.inlineQuery.query;
-  fetch(
-    "https://www.wordsapi.com/mashape/words/" +
-      word +
-      "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
-  )
+  fetch("https://owlbot.info/api/v4/dictionary/" + word, {
+    headers: {
+      Authorization: "Token " + process.env.OWL_TOKEN,
+    },
+  })
     .then((res) => {
-      if (res.status === 404) {
-        return null;
-      }
       return res.json();
     })
     .then((resBody) => {
-      if (resBody === null) {
+      if (resBody.message !== undefined) {
         ctx.answerInlineQuery([]);
       } else {
         const defs = resBody;
-        const text = defs.results.map((info, index) => {
-          const examples =
-            info.examples === undefined
-              ? null
-              : info.examples.map((eg) => {
-                  return `\"${eg}\"`;
-                });
-          return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
-            examples ? '"\n_*eg*_:\n' + examples.join("\n") : ""
-          }${
-            info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
+        const emoji = defs.definitions
+          .map((info) => {
+            return info.emoji ? info.emoji : "";
+          })
+          .join();
+        const image = defs.definitions
+          .map((info) => {
+            return info.image_url ? info.image_url : "";
+          })
+          .join();
+        const text = defs.definitions.map((info, index) => {
+          return `_${info.type}_\n_*definition*_: \"${info.definition}${
+            info.example ? '"\n_*eg*_:\n' + info.example : ""
           }`;
         });
 
@@ -67,16 +124,13 @@ bot.on("inline_query", (ctx) => {
             type: "article",
             id: 0,
             title: defs.word,
-            description: defs.results[0].definition,
-            message_text: `*${defs.word}*${
-              defs.pronunciation instanceof Object
-                ? '\n_pronunciation_: "' + defs.pronunciation.all
-                : defs.pronunciation === undefined
-                ? ""
-                : '\n_pronunciation_: "' + defs.pronunciation
+            description: defs.definitions[0].definition,
+            message_text: `*${defs.word}* ${emoji}${
+              '\n_pronunciation_: "' + defs.pronunciation
             }\"\n\n${text
               .join("\n\n\n")
               .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
+            thumb_url: image,
             parse_mode: "MarkdownV2",
           },
         ];
@@ -87,6 +141,7 @@ bot.on("inline_query", (ctx) => {
       console.log(err);
     });
 });
+
 // bot.launch();
 
 // Enable graceful stop
