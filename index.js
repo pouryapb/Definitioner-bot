@@ -1,11 +1,12 @@
-const fetch = require("node-fetch");
-const express = require("express");
+import fetch from "node-fetch";
+import express from "express";
 const app = express();
-const { Telegraf } = require("telegraf");
+import { Telegraf } from "telegraf";
 
 const token = process.env.BOT_TOKEN;
 const url = process.env.URL + "secret-path";
 const port = process.env.PORT || 3000;
+const owl_token = process.env.OWL_TOKEN;
 
 if (token === undefined) {
   throw new Error("BOT_TOKEN must be provided!");
@@ -91,8 +92,9 @@ bot.hears("hi", (ctx) => ctx.reply("Hellow there!"));
 bot.on("inline_query", (ctx) => {
   const word = ctx.inlineQuery.query;
   fetch("https://owlbot.info/api/v4/dictionary/" + word, {
+    method: "GET",
     headers: {
-      Authorization: "Token " + process.env.OWL_TOKEN,
+      Authorization: "Token " + owl_token,
     },
   })
     .then((res) => {
