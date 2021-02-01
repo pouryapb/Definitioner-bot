@@ -105,6 +105,7 @@ bot.on("inline_query", async (ctx) => {
           parse_mode: "MarkdownV2",
         },
       ];
+      console.log(result);
       ctx.answerInlineQuery(result);
     }
   });
