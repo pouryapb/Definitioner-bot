@@ -33,7 +33,7 @@ bot.help((ctx) => ctx.reply("Send me a sticker"));
 bot.on("sticker", (ctx) => ctx.reply("👍"));
 bot.hears("hi", (ctx) => ctx.reply("Hellow there!"));
 
-bot.on("inline_query", (ctx) => {
+bot.on("inline_query", async (ctx) => {
   //   client
   //     .define(ctx.inlineQuery.query)
   //     .then((def) => {
@@ -69,7 +69,7 @@ bot.on("inline_query", (ctx) => {
   //     });
 
   const word = ctx.inlineQuery.query;
-  const defs = wordsApi(word);
+  const defs = await wordsApi(word);
   console.log(defs);
   if (defs === null) {
     ctx.answerInlineQuery([]);
