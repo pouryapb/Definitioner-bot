@@ -82,7 +82,7 @@ bot.on("inline_query", (ctx) => {
       }
     })
     .then((resBody) => {
-      if (resBody === null) {
+      if (resBody === undefined) {
         ctx.answerInlineQuery([]);
       } else {
         const defs = resBody;
