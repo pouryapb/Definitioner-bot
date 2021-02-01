@@ -81,7 +81,7 @@ bot.on("inline_query", (ctx) => {
       return res.json();
     })
     .then((resBody) => {
-      if (!resBody) {
+      if (resBody === null) {
         ctx.answerInlineQuery([]);
       } else {
         const defs = resBody;
@@ -106,7 +106,7 @@ bot.on("inline_query", (ctx) => {
             title: defs.word,
             description: defs.results[0].definition,
             message_text:
-              `*${defs.word}*\n_pronunciation_: \"${defs.pronunciation.all}\"\n` +
+              `*${defs.word}*\n_pronunciation_: \"${defs.pronunciation.all}\"\n\n` +
               text
                 .join("\n\n\n")
                 .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&"),
@@ -115,6 +115,9 @@ bot.on("inline_query", (ctx) => {
         ];
         ctx.answerInlineQuery(result);
       }
+    })
+    .catch((err) => {
+      console.log(err);
     });
 });
 // bot.launch();
