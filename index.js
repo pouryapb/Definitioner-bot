@@ -8,7 +8,6 @@ const client = owlbot("d4b6519052c290612328dc4e6fb3e862b0ce3b0a");
 
 // const spellChecker = require("simple-spellchecker");
 // const dictionary = spellChecker.getDictionarySync("en-US");
-
 // const suggestions = dictionary.getSuggestions("ow");
 // const result = suggestions.map(async (word) => {
 //   const result = await client.define(word);
