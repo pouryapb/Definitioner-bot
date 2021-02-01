@@ -1,6 +1,6 @@
 const fetch = require("node-fetch");
 
-const wordsApi = (word) => {
+const wordsApi = async (word) => {
   console.log("IN WORDSAPI!");
   fetch(
     "https://www.wordsapi.com/mashape/words/" +
