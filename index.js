@@ -1,9 +1,9 @@
+const fetch = require("node-fetch");
 const express = require("express");
 const app = express();
 // const owlbot = require("owlbot-js");
 const { Telegraf } = require("telegraf");
 
-const wordsApi = require("./wordsApi");
 const token = process.env.BOT_TOKEN;
 // const owl_token = process.env.OWL_TOKEN;
 const url = process.env.URL + "secret-path";
@@ -69,38 +69,45 @@ bot.on("inline_query", async (ctx) => {
   //     });
 
   const word = ctx.inlineQuery.query;
-  const defs = await wordsApi(word);
-  console.log(defs);
-  if (!defs) {
-    ctx.answerInlineQuery([]);
-  } else {
-    const text = defs.results.map((info, index) => {
-      const examples = info.examples
-        ? null
-        : info.examples.map((eg) => {
-            return `\"${eg}\"`;
-          });
-      return `_${info.partOfSpeech}_\ndefinition: \"${info.definition}${
-        examples ? '\n"eg:\n' + examples.join("\n") : ""
-      }${info.synonyms ? "\n\n _Synonyms_: " + info.synonyms.join(", ") : ""}`;
-    });
+  fetch(
+    "https://www.wordsapi.com/mashape/words/" +
+      word +
+      "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
+  ).then((res) => {
+    if (res.status === 404) {
+      ctx.answerInlineQuery([]);
+    } else {
+      const defs = res.json();
+      const text = defs.results.map((info, index) => {
+        const examples = info.examples
+          ? null
+          : info.examples.map((eg) => {
+              return `\"${eg}\"`;
+            });
+        return `_${info.partOfSpeech}_\ndefinition: \"${info.definition}${
+          examples ? '\n"eg:\n' + examples.join("\n") : ""
+        }${
+          info.synonyms ? "\n\n _Synonyms_: " + info.synonyms.join(", ") : ""
+        }`;
+      });
 
-    const result = [
-      {
-        type: "article",
-        id: 0,
-        title: defs.word,
-        description: defs.results[0].definition,
-        message_text:
-          `*${defs.word}\npronunciation: ${defs.pronunciation.all}\n*` +
-          text
-            .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")
-            .join("\n\n\n"),
-        parse_mode: "MarkdownV2",
-      },
-    ];
-    ctx.answerInlineQuery(result);
-  }
+      const result = [
+        {
+          type: "article",
+          id: 0,
+          title: defs.word,
+          description: defs.results[0].definition,
+          message_text:
+            `*${defs.word}\npronunciation: ${defs.pronunciation.all}\n*` +
+            text
+              .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")
+              .join("\n\n\n"),
+          parse_mode: "MarkdownV2",
+        },
+      ];
+      ctx.answerInlineQuery(result);
+    }
+  });
 });
 // bot.launch();
 
