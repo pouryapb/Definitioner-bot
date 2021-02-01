@@ -69,9 +69,9 @@ bot.on("inline_query", (ctx) => {
             title: defs.word,
             description: defs.results[0].definition,
             message_text: `*${defs.word}*${
-              defs.pronunciation instanceof Object
+              !(defs.pronunciation instanceof Object)
                 ? '\n_pronunciation_: "' + defs.pronunciation
-                : defs.pronunciation === undefined
+                : defs.pronunciation instanceof undefined
                 ? ""
                 : '\n_pronunciation_: "' + defs.pronunciation.all
             }\"\n\n${text
