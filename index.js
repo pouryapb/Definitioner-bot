@@ -85,7 +85,6 @@ bot.on("inline_query", (ctx) => {
         ctx.answerInlineQuery([]);
       } else {
         const defs = resBody;
-        console.log("DEEEEEEEEEEEEEEEEEEEFS: ", defs);
         const text = defs.results.map((info, index) => {
           const examples =
             info.examples === undefined
@@ -93,10 +92,10 @@ bot.on("inline_query", (ctx) => {
               : info.examples.map((eg) => {
                   return `\"${eg}\"`;
                 });
-          return `_${info.partOfSpeech}_\ndefinition: \"${info.definition}${
-            examples ? '\n"eg:\n' + examples.join("\n") : ""
+          return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
+            examples ? '\n"_*eg*_:\n' + examples.join("\n") : ""
           }${
-            info.synonyms ? "\n\n _Synonyms_: " + info.synonyms.join(", ") : ""
+            info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
           }`;
         });
 
@@ -107,14 +106,13 @@ bot.on("inline_query", (ctx) => {
             title: defs.word,
             description: defs.results[0].definition,
             message_text:
-              `*${defs.word}\npronunciation: ${defs.pronunciation.all}\n*` +
+              `*${defs.word}*\n_pronunciation_: \"${defs.pronunciation.all}\"\n` +
               text
                 .join("\n\n\n")
                 .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&"),
             parse_mode: "MarkdownV2",
           },
         ];
-        console.log(result);
         ctx.answerInlineQuery(result);
       }
     });
