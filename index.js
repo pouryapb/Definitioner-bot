@@ -105,11 +105,11 @@ bot.on("inline_query", (ctx) => {
             id: 0,
             title: defs.word,
             description: defs.results[0].definition,
-            message_text:
-              `*${defs.word}*\n_pronunciation_: \"${defs.pronunciation.all}\"\n` +
-              text
-                .join("\n\n\n")
-                .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&"),
+            message_text: `*${defs.word}*\n_pronunciation_: \"${
+              defs.pronunciation.all
+            }\"\n${text
+              .join("\n\n\n")
+              .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
             parse_mode: "MarkdownV2",
           },
         ];
