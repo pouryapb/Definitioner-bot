@@ -1,18 +1,31 @@
 const express = require("express");
 const app = express();
 const owlbot = require("owlbot-js");
-const client = owlbot(process.env.OWL_TOKEN);
-
 const { Telegraf } = require("telegraf");
-const bot = new Telegraf(process.env.BOT_TOKEN);
 
+const token = process.env.BOT_TOKEN;
+const owl_token = process.env.OWL_TOKEN;
+const url = process.env.URL + "secret-path";
 const port = process.env.PORT || 3000;
-app.get("/", (req, res, next) => {
-  res.send("Hellow There!");
-});
+
+if (token === undefined) {
+  throw new Error("BOT_TOKEN must be provided!");
+}
+
+const bot = new Telegraf(token);
+const client = owlbot(owl_token);
+
+// Set telegram webhook
+// npm install -g localtunnel && lt --port 3000
+bot.telegram.setWebhook(url);
+
+app.get("/", (req, res, next) => res.send("Hello World!"));
+
+// Set the bot API endpoint
+app.use(bot.webhookCallback("/secret-path"));
 
 app.listen(port, () => {
-  console.log(`express listenning on port ${port}`);
+  console.log(`Example app listening on port ${port}!`);
 });
 
 bot.start((ctx) => ctx.reply("Welcome"));
@@ -56,7 +69,7 @@ ${
       ctx.answerInlineQuery([]);
     });
 });
-bot.launch();
+// bot.launch();
 
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
