@@ -78,6 +78,7 @@ bot.on("inline_query", async (ctx) => {
       ctx.answerInlineQuery([]);
     } else {
       const defs = res.json();
+      console.log("DEEEEEEEEEEEEEEEEEEEFS: ", defs);
       const text = defs.results.map((info, index) => {
         const examples = info.examples
           ? null
