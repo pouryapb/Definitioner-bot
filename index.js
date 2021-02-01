@@ -1,10 +1,8 @@
 const { Telegraf } = require("telegraf");
-const bot = new Telegraf(
-  process.env.BOT_TOKEN || "683862676:AAHsad1bUvl8AqddaOZoRPHvq3lQcVo4nH0"
-);
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const owlbot = require("owlbot-js");
-const client = owlbot("d4b6519052c290612328dc4e6fb3e862b0ce3b0a");
+const client = owlbot(process.env.OWL_TOKEN);
 
 // const spellChecker = require("simple-spellchecker");
 // const dictionary = spellChecker.getDictionarySync("en-US");
