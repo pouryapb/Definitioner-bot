@@ -81,23 +81,28 @@ bot.on("inline_query", (ctx) => {
       return res.json();
     })
     .then((resBody) => {
-      if (resBody !== null && !resBody.success) {
+      if (resBody !== null) {
         ctx.answerInlineQuery([]);
       } else {
         const defs = resBody;
-        const text = defs.results.map((info, index) => {
-          const examples =
-            info.examples === undefined
-              ? null
-              : info.examples.map((eg) => {
-                  return `\"${eg}\"`;
-                });
-          return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
-            examples ? '\n"_*eg*_:\n' + examples.join("\n") : ""
-          }\"${
-            info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
-          }`;
-        });
+        const text =
+          defs.results === undefined
+            ? ""
+            : defs.results.map((info, index) => {
+                const examples =
+                  info.examples === undefined
+                    ? null
+                    : info.examples.map((eg) => {
+                        return `\"${eg}\"`;
+                      });
+                return `_${info.partOfSpeech}_\n_*definition*_: \"${
+                  info.definition
+                }${examples ? '\n"_*eg*_:\n' + examples.join("\n") : ""}\"${
+                  info.synonyms
+                    ? "\n_*Synonyms*_: " + info.synonyms.join(", ")
+                    : ""
+                }`;
+              });
 
         const result = [
           {
