@@ -91,7 +91,7 @@ bot.hears("hi", (ctx) => ctx.reply("Hellow there!"));
 
 bot.on("inline_query", (ctx) => {
   const word = ctx.inlineQuery.query;
-  fetch("https://owlbot.info/api/v4/dictionary/" + word, {
+  fetch("http://owlbot.info/api/v4/dictionary/" + word, {
     method: "GET",
     headers: {
       Authorization: "Token " + owl_token,
