@@ -87,11 +87,12 @@ bot.on("inline_query", (ctx) => {
         const defs = resBody;
         console.log("DEEEEEEEEEEEEEEEEEEEFS: ", defs);
         const text = defs.results.map((info, index) => {
-          const examples = info.examples
-            ? null
-            : info.examples.map((eg) => {
-                return `\"${eg}\"`;
-              });
+          const examples =
+            info.examples === undefined
+              ? null
+              : info.examples.map((eg) => {
+                  return `\"${eg}\"`;
+                });
           return `_${info.partOfSpeech}_\ndefinition: \"${info.definition}${
             examples ? '\n"eg:\n' + examples.join("\n") : ""
           }${
