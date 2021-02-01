@@ -77,8 +77,9 @@ bot.on("inline_query", (ctx) => {
     .then((res) => {
       if (res.status === 404) {
         return null;
+      } else {
+        return res.json();
       }
-      return res.json();
     })
     .then((resBody) => {
       if (resBody === null) {
@@ -94,7 +95,7 @@ bot.on("inline_query", (ctx) => {
                 });
           return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
             examples ? '\n"_*eg*_:\n' + examples.join("\n") : ""
-          }${
+          }\"${
             info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
           }`;
         });
