@@ -8,10 +8,10 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // Set telegram webhook
 // The second argument is necessary only if the client uses a self-signed
 // certificate. Including it for a verified certificate may cause things to break.
-bot.telegram.setWebhook("https://server.tld:8443/secret-path");
+bot.telegram.setWebhook(process.env.URL);
 
 // Http webhook, for nginx/heroku users.
-bot.startWebhook("/secret-path", null, 5000);
+bot.startWebhook("/secret-path", null, process.env.PORT);
 
 // const spellChecker = require("simple-spellchecker");
 // const dictionary = spellChecker.getDictionarySync("en-US");
