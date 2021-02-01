@@ -98,6 +98,7 @@ bot.on("inline_query", (ctx) => {
     },
   })
     .then((res) => {
+      console.log("RESSSSSSPONSEEEEEEE", res);
       return res.json();
     })
     .then((resBody) => {
