@@ -56,8 +56,8 @@ bot.on("inline_query", (ctx) => {
                   return `\"${eg}\"`;
                 });
           return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
-            examples ? '\n"_*eg*_:\n' + examples.join("\n") : ""
-          }\"${
+            examples ? '"\n_*eg*_:\n' + examples.join("\n") : ""
+          }${
             info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
           }`;
         });
@@ -69,10 +69,11 @@ bot.on("inline_query", (ctx) => {
             title: defs.word,
             description: defs.results[0].definition,
             message_text: `*${defs.word}*${
-              '\n_pronunciation_: "' +
-              (!(defs.pronunciation instanceof Object)
-                ? defs.pronunciation
-                : defs.pronunciation.all)
+              !(defs.pronunciation instanceof Object)
+                ? '\n_pronunciation_: "' + defs.pronunciation
+                : defs.pronunciation === undefined
+                ? ""
+                : '\n_pronunciation_: "' + defs.pronunciation.all
             }\"\n\n${text
               .join("\n\n\n")
               .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
