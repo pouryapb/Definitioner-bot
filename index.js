@@ -75,14 +75,10 @@ bot.on("inline_query", (ctx) => {
       "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
   )
     .then((res) => {
-      if (res.status === 404) {
-        return null;
-      } else {
-        return res.json();
-      }
+      return res.json();
     })
     .then((resBody) => {
-      if (resBody === undefined) {
+      if (!resBody.success) {
         ctx.answerInlineQuery([]);
       } else {
         const defs = resBody;
@@ -106,8 +102,10 @@ bot.on("inline_query", (ctx) => {
             id: 0,
             title: defs.word,
             description: defs.results[0].definition,
-            message_text: `*${defs.word}*\n_pronunciation_: \"${
-              defs.pronunciation.all
+            message_text: `*${defs.word}*${
+              defs.pronunciation
+                ? defs.pronunciation
+                : '\n_pronunciation_: "' + defs.pronunciation.all
             }\"\n\n${text
               .join("\n\n\n")
               .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
