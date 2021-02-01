@@ -11,7 +11,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.telegram.setWebhook(process.env.URL);
 
 // Http webhook, for nginx/heroku users.
-bot.startWebhook("/secret-path", null, process.env.PORT);
+bot.startWebhook("/secret-path", null, process.env.$PORT);
 
 // const spellChecker = require("simple-spellchecker");
 // const dictionary = spellChecker.getDictionarySync("en-US");
