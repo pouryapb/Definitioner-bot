@@ -1,25 +1,19 @@
-require("dotenv");
+const express = require("express");
+const app = express();
 const owlbot = require("owlbot-js");
 const client = owlbot(process.env.OWL_TOKEN);
 
 const { Telegraf } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Set telegram webhook
-// The second argument is necessary only if the client uses a self-signed
-// certificate. Including it for a verified certificate may cause things to break.
-bot.telegram.setWebhook(process.env.URL + "secret-path");
+const port = process.env.PORT || 3000;
+app.get("/", (req, res, next) => {
+  res.send("Hellow There!");
+});
 
-// Http webhook, for nginx/heroku users.
-bot.startWebhook("/secret-path", null, process.env.$PORT);
-
-// const spellChecker = require("simple-spellchecker");
-// const dictionary = spellChecker.getDictionarySync("en-US");
-// const suggestions = dictionary.getSuggestions("ow");
-// const result = suggestions.map(async (word) => {
-//   const result = await client.define(word);
-//   return result;
-// });
+app.listen(port, () => {
+  console.log(`express listenning on port ${port}`);
+});
 
 bot.start((ctx) => ctx.reply("Welcome"));
 bot.help((ctx) => ctx.reply("Send me a sticker"));
