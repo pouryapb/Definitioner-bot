@@ -108,7 +108,7 @@ bot.on("inline_query", (ctx) => {
             description: defs.results[0].definition,
             message_text: `*${defs.word}*\n_pronunciation_: \"${
               defs.pronunciation.all
-            }\"\n${text
+            }\"\n\n${text
               .join("\n\n\n")
               .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
             parse_mode: "MarkdownV2",
