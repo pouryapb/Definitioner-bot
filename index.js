@@ -56,7 +56,7 @@ bot.on("inline_query", (ctx) => {
               : info.examples.map((eg) => {
                   return `\"${eg}\"`;
                 });
-          return `_${info.partOfSpeech}_\n_*definition*_: \"${info.definition}${
+          return `_${info.partOfSpeech}_\n_*definition*_: "${info.definition}"${
             examples ? '"\n_*eg*_:\n' + examples.join("\n") : ""
           }${
             info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
