@@ -27,9 +27,57 @@ app.listen(port, () => {
 });
 
 bot.start((ctx) => ctx.reply("Welcome"));
-bot.help((ctx) => ctx.reply("Send me a sticker"));
-bot.on("sticker", (ctx) => ctx.reply("👍"));
-bot.hears("hi", (ctx) => ctx.reply("Hellow there!"));
+
+bot.on("text", (ctx) => {
+  const word = ctx.message.text;
+  fetch(
+    "https://www.wordsapi.com/mashape/words/" +
+      word +
+      "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
+  )
+    .then((res) => {
+      if (res.status === 404) {
+        return null;
+      }
+      return res.json();
+    })
+    .then((resBody) => {
+      if (resBody === null) {
+        ctx.reply("No match found for " + word);
+      } else {
+        const defs = resBody;
+        const text = defs.results.map((info, index) => {
+          const examples =
+            info.examples === undefined
+              ? null
+              : info.examples.map((eg) => {
+                  return `\"${eg}\"`;
+                });
+          return `_${info.partOfSpeech}_\n_*definition*_: "${info.definition}"${
+            examples ? "\n_*eg*_:\n" + examples.join("\n") : ""
+          }${
+            info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
+          }`;
+        });
+        ctx.reply(
+          `*${defs.word}*${
+            defs.pronunciation instanceof Object
+              ? '\n_pronunciation_: "' + defs.pronunciation.all
+              : defs.pronunciation === undefined
+              ? ""
+              : '\n_pronunciation_: "' + defs.pronunciation
+          }\"\n\n${text
+            .join("\n\n\n")
+            .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
+          { parse_mode: "MarkdownV2" }
+        );
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      ctx.reply("There was a problem finding definitions, please try again.");
+    });
+});
 
 bot.on("inline_query", (ctx) => {
   const word = ctx.inlineQuery.query;
