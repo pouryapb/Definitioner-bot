@@ -1,203 +1,180 @@
-import fetch from "node-fetch";
-import express from "express";
-const app = express();
-import { Telegraf } from "telegraf";
+import express from 'express';
+import { Telegraf } from 'telegraf';
+import { message } from 'telegraf/filters';
+import { escapers } from '@telegraf/entity';
 
 const token = process.env.BOT_TOKEN;
-const url = process.env.URL + "secret-path";
 const port = process.env.PORT || 3000;
-// const owl_token = process.env.OWL_TOKEN;
 
 if (token === undefined) {
-  throw new Error("BOT_TOKEN must be provided!");
+  throw new Error('BOT_TOKEN must be provided!');
 }
 
 const bot = new Telegraf(token);
+const app = express();
 
-// Set telegram webhook
-bot.telegram.setWebhook(url);
+app.use(await bot.createWebhook({ domain: process.env.VERCEL_URL }));
 
-app.get("/", (req, res, next) => res.send("Hello World!"));
+app.get('/', (_, res) => res.send('Hello World!'));
 
-// Set the bot API endpoint
-app.use(bot.webhookCallback("/secret-path"));
+const fetchResult = async (query) => {
+  if (!query) return null;
+  try {
+    const response = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${query}`
+    );
+    const result = await response.json();
+    if (!Array.isArray(result)) return null;
+    return result;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+/**
+ *
+ * @param {import('./types').WordDefinition} wordDefinition
+ */
+const getWordDefiniton = (wordDefinition) => {
+  const parts = [];
+  for (const meaning of wordDefinition.meanings) {
+    const part = getPartOfSpeachDefinitions(meaning);
+    parts.push(part);
+  }
+  return parts;
+};
+
+/**
+ *
+ * @param {import('./types').WordDefinition} wordDefinition
+ */
+const getWordDefinitonForInlineQuery = (wordDefinition) => {
+  const parts = [];
+  for (const meaning of wordDefinition.meanings) {
+    const part = `${escapers.MarkdownV2(meaning.partOfSpeech)}`;
+    const meanings = getMeaningDefinitions(meaning.definitions, true);
+    parts.push({
+      part,
+      meanings,
+    });
+  }
+  return parts;
+};
+
+/**
+ *
+ * @param {import('./types').Meaning} meaning
+ */
+const getPartOfSpeachDefinitions = (meaning) => {
+  const part = `*_${escapers.MarkdownV2(meaning.partOfSpeech)}_*\n`;
+  const meanings = getMeaningDefinitions(meaning.definitions).join('\n\n');
+  return part + meanings;
+};
+
+/**
+ *
+ * @param {import('./types').Definition[]} meaningDefinitions
+ */
+const getMeaningDefinitions = (meaningDefinitions, noNums = false) => {
+  return meaningDefinitions.map((v, i) => {
+    let res = '';
+    if (meaningDefinitions.length > 1 && !noNums) res += `${i + 1}\\. `;
+    res += escapers.MarkdownV2(v.definition);
+    if (v.example) res += `\n"${escapers.MarkdownV2(v.example)}"`;
+    if (v.synonyms.length > 0)
+      res += `\n\n*Synonyms:* ${escapers.MarkdownV2(v.synonyms.join(', '))}`;
+    return res;
+  });
+};
+
+/**
+ *
+ * @param {import('./types').WordDefinition[]} definitions
+ */
+const getMessageBodies = (definitions) => {
+  const res = [];
+  for (const definition of definitions) {
+    const def = getWordDefiniton(definition).join('\n\n');
+    res.push(
+      `*${escapers.MarkdownV2(definition.word)}*\n${
+        definition.phonetic &&
+        '_' + escapers.MarkdownV2(definition.phonetic) + '_'
+      }\n\n${def}`
+    );
+  }
+  return res;
+};
+
+/**
+ *
+ * @param {import('./types').WordDefinition[]} definitions
+ */
+const getInlineQueryResults = (definitions) => {
+  const res = [];
+  for (const definition of definitions) {
+    const defs = getWordDefinitonForInlineQuery(definition);
+    res.push({
+      header: `*${escapers.MarkdownV2(definition.word)}*\n${
+        definition.phonetic &&
+        '_' + escapers.MarkdownV2(definition.phonetic) + '_'
+      }`,
+      defs,
+    });
+  }
+  return res;
+};
+
+bot.on(message('text'), async (ctx) => {
+  const word = ctx.message.text;
+  /**
+   * @type {import('./types').WordDefinition[] | null}
+   */
+  const result = await fetchResult(word);
+  if (!result) return ctx.reply('Sorry, word not found.');
+  const res = getMessageBodies(result);
+  for (const text of res) {
+    await ctx.replyWithMarkdownV2(text);
+  }
+});
+
+bot.on('inline_query', async (ctx) => {
+  const word = ctx.inlineQuery.query;
+  /**
+   * @type {import('./types').WordDefinition[] | null}
+   */
+  const result = await fetchResult(word);
+  if (!result) return ctx.answerInlineQuery([]);
+  const res = getInlineQueryResults(result);
+
+  /**
+   * @type {import('telegraf/typings/core/types/typegram').InlineQueryResult[]}
+   */
+  const answers = [];
+  for (let i = 0; i < res.length; i++) {
+    const wordDef = res[i];
+    for (let j = 0; j < wordDef.defs.length; j++) {
+      const def = wordDef.defs[j];
+      for (let k = 0; k < def.meanings.length; k++) {
+        const partMeaning = def.meanings[k];
+        answers.push({
+          id: `${i}${j}${k}`,
+          type: 'article',
+          title: def.part,
+          description: partMeaning,
+          input_message_content: {
+            message_text: `${wordDef.header}\n\n*_${def.part}_*\n${partMeaning}`,
+            parse_mode: 'MarkdownV2',
+          },
+        });
+      }
+    }
+  }
+  return ctx.answerInlineQuery(answers);
+});
 
 app.listen(port, () => {
   console.log(`app listening on port ${port}!`);
 });
 
-bot.start((ctx) => ctx.reply("Welcome"));
-
-bot.on("text", (ctx) => {
-  const word = ctx.message.text;
-  fetch(
-    "https://www.wordsapi.com/mashape/words/" +
-      word +
-      "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
-  )
-    .then((res) => {
-      if (res.status === 404) {
-        return null;
-      }
-      return res.json();
-    })
-    .then((resBody) => {
-      if (resBody === null) {
-        ctx.reply("No match found for " + word);
-      } else {
-        const defs = resBody;
-        const text = defs.results.map((info, index) => {
-          const examples =
-            info.examples === undefined
-              ? null
-              : info.examples.map((eg) => {
-                  return `\"${eg}\"`;
-                });
-          return `_${info.partOfSpeech}_\n_*definition*_: "${info.definition}"${
-            examples ? "\n_*eg*_:\n" + examples.join("\n") : ""
-          }${
-            info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
-          }`;
-        });
-        ctx.reply(
-          `*${defs.word}*${
-            defs.pronunciation instanceof Object
-              ? '\n_pronunciation_: "' + defs.pronunciation.all
-              : defs.pronunciation === undefined
-              ? ""
-              : '\n_pronunciation_: "' + defs.pronunciation
-          }\"\n\n${text
-            .join("\n\n\n")
-            .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
-          { parse_mode: "MarkdownV2" }
-        );
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      ctx.reply("There was a problem finding definitions, please try again.");
-    });
-});
-
-bot.on("inline_query", (ctx) => {
-  const word = ctx.inlineQuery.query;
-  fetch(
-    "https://www.wordsapi.com/mashape/words/" +
-      word +
-      "?when=2021-02-01T13:30:10.197Z&encrypted=8cfdb18be722919bea9007beec58bdb9aeb12d0931f690b8"
-  )
-    .then((res) => {
-      if (res.status === 404) {
-        return null;
-      }
-      return res.json();
-    })
-    .then((resBody) => {
-      if (resBody === null) {
-        ctx.answerInlineQuery([]);
-      } else {
-        const defs = resBody;
-        const text = defs.results.map((info, index) => {
-          const examples =
-            info.examples === undefined
-              ? null
-              : info.examples.map((eg) => {
-                  return `\"${eg}\"`;
-                });
-          return `_${info.partOfSpeech}_\n_*definition*_: "${info.definition}"${
-            examples ? "\n_*eg*_:\n" + examples.join("\n") : ""
-          }${
-            info.synonyms ? "\n_*Synonyms*_: " + info.synonyms.join(", ") : ""
-          }`;
-        });
-
-        const result = [
-          {
-            type: "article",
-            id: 0,
-            title: defs.word,
-            description: defs.results[0].definition,
-            message_text: `*${defs.word}*${
-              defs.pronunciation instanceof Object
-                ? '\n_pronunciation_: "' + defs.pronunciation.all
-                : defs.pronunciation === undefined
-                ? ""
-                : '\n_pronunciation_: "' + defs.pronunciation
-            }\"\n\n${text
-              .join("\n\n\n")
-              .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
-            parse_mode: "MarkdownV2",
-          },
-        ];
-        ctx.answerInlineQuery(result);
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-});
-
-// OWLBOT witch is not working on heroku
-// bot.on("inline_query", (ctx) => {
-//   const word = ctx.inlineQuery.query;
-//   fetch("http://owlbot.info/api/v4/dictionary/" + word, {
-//     method: "GET",
-//     headers: {
-//       Authorization: "Token " + owl_token,
-//     },
-//   })
-//     .then((res) => {
-//       console.log("RESSSSSSPONSEEEEEEE", res);
-//       return res.json();
-//     })
-//     .then((resBody) => {
-//       if (resBody.message !== undefined) {
-//         ctx.answerInlineQuery([]);
-//       } else {
-//         const defs = resBody;
-//         const emoji = defs.definitions
-//           .map((info) => {
-//             return info.emoji ? info.emoji : "";
-//           })
-//           .join();
-//         const image = defs.definitions
-//           .map((info) => {
-//             return info.image_url ? info.image_url : "";
-//           })
-//           .join();
-//         const text = defs.definitions.map((info, index) => {
-//           return `_${info.type}_\n_*definition*_: \"${info.definition}${
-//             info.example ? '"\n_*eg*_:\n' + info.example : ""
-//           }`;
-//         });
-
-//         const result = [
-//           {
-//             type: "article",
-//             id: 0,
-//             title: defs.word,
-//             description: defs.definitions[0].definition,
-//             message_text: `*${defs.word}* ${emoji}${
-//               '\n_pronunciation_: "' + defs.pronunciation
-//             }\"\n\n${text
-//               .join("\n\n\n")
-//               .replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|\!\>\<]/g, "\\$&")}`,
-//             thumb_url: image,
-//             parse_mode: "MarkdownV2",
-//           },
-//         ];
-//         ctx.answerInlineQuery(result);
-//       }
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// });
-
-// bot.launch();
-
-// Enable graceful stop
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
-
-console.log("Bot it up!!");
+export default app;
