@@ -116,8 +116,9 @@ const getInlineQueryResults = (definitions) => {
     const defs = getWordDefinitonForInlineQuery(definition);
     res.push({
       header: `*${escapers.MarkdownV2(definition.word)}*\n${
-        definition.phonetic &&
-        '_' + escapers.MarkdownV2(definition.phonetic) + '_'
+        definition.phonetic
+          ? '_' + escapers.MarkdownV2(definition.phonetic) + '_'
+          : ''
       }`,
       defs,
     });
