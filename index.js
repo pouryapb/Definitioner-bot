@@ -81,7 +81,7 @@ const getMeaningDefinitions = (meaningDefinitions, noNums = false) => {
     let res = '';
     if (meaningDefinitions.length > 1 && !noNums) res += `${i + 1}\\. `;
     res += escapers.MarkdownV2(v.definition);
-    if (v.example) res += `\n"${escapers.MarkdownV2(v.example)}"`;
+    if (v.example) res += `\n>${escapers.MarkdownV2(v.example)}`;
     if (v.synonyms.length > 0)
       res += `\n\n*Synonyms:* ${escapers.MarkdownV2(v.synonyms.join(', '))}`;
     return res;
